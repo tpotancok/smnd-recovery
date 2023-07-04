@@ -34,6 +34,7 @@ export default function Home() {
 
     if (files.length === 0) {
       alert("Nahrajte aspoň jeden súbor");
+      setLoading(false);
       return;
     }
 
