@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import Dropzone, { useDropzone } from "react-dropzone";
 import FileChip from "@/components/FileChip";
 import { Dropdown } from "@/components/Dropdown";
+import axios from "axios";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,25 +26,68 @@ export default function Home() {
     setFiles((prev) => [...prev, ...acceptedFiles]);
   }, []);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (files.length === 0) {
       alert("Nahrajte aspoň jeden súbor");
       return;
     }
+
+    const res = await fetch("/api/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        material,
+        teacher,
+        subject,
+        year,
+        files: files.map((file) => {
+          return {
+            name: file.name,
+            type: file.type,
+          };
+        }),
+      }),
+    });
+
+    if (res.status === 200) {
+      const body = await res.json();
+      const { signedUrls } = body;
+
+      const promises = files.map((file, i) => {
+        console.log(signedUrls[i], file, file.type);
+        return axios.put(signedUrls[i], file, {
+          headers: {
+            "Content-Type": file.type,
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+      });
+
+      await Promise.all(promises);
+    }
+
+    alert("Úspešne odoslané");
+    setMaterial("");
+    setTeacher("");
+    setSubject("");
+    setYear("");
+    setFiles([]);
   }
 
   return (
     <main className={`mt-24 flex min-h-screen flex-col items-center px-5 ${inter.className}`}>
       <h1 className="text-center text-3xl font-bold">Obnova edukačných materiálov</h1>
-      <p className="mt-1 w-full text-center text-sm leading-6 text-gray-600 md:w-1/3">
+      <p className="mt-1 w-full text-center text-sm leading-6 text-gray-600 md:w-2/3 lg:w-1/3">
         V dôsledku vyhorenia zborovne sa stratila vysoká kvantita edukačných materiálov. Ak by ste
         si našli chvíľku, aby ste nám pomohli s obnovou, boli by sme veľmi vďační.
       </p>
       <form className="w-full max-w-3xl" onSubmit={onSubmit}>
         <div className="w-full border-b border-gray-900/10 pb-12">
-          <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 ">
+          <div className="mt-10 grid grid-cols-1 gap-y-4 md:grid-cols-6 md:gap-x-6 md:gap-y-8 ">
             {/* Material name */}
             <div className="col-span-full">
               <label htmlFor="material" className="label-base">
@@ -235,13 +279,10 @@ export default function Home() {
                     </label>
                     <p className="pl-1">alebo ich sem presuňte</p>
                   </div>
-                  <p className="text-center text-xs leading-5 text-gray-600">
-                    Prezentácie, dokumenty, obrázky do 30MB
-                  </p>
 
-                  <div className="mt-2">
-                    {files.length > 0 &&
-                      files.map((file, index) => (
+                  {files.length > 0 && (
+                    <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                      {files.map((file, index) => (
                         <FileChip
                           file={file}
                           key={index}
@@ -252,7 +293,8 @@ export default function Home() {
                           }}
                         />
                       ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </Dropzone>

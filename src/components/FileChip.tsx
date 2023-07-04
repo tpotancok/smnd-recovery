@@ -1,5 +1,3 @@
-import { MouseEventHandler } from "react";
-
 const FileChip = ({
   file,
   onDelete,
@@ -10,7 +8,7 @@ const FileChip = ({
   return (
     <span
       id="badge-dismiss-dark"
-      className="mr-2 inline-flex items-center rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-800">
+      className="inline-flex items-center rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-800">
       {file.name}
       <button
         type="button"
