@@ -4,6 +4,7 @@ import Dropzone from "react-dropzone";
 import FileChip from "@/components/FileChip";
 import { Dropdown } from "@/components/Dropdown";
 import axios from "axios";
+import Head from "next/head";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,6 +14,7 @@ export default function Home() {
   const [subject, setSubject] = useState("");
   const [year, setYear] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (files.length + acceptedFiles.length > 8) {
@@ -28,6 +30,7 @@ export default function Home() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setLoading(true);
 
     if (files.length === 0) {
       alert("Nahrajte aspoň jeden súbor");
@@ -57,10 +60,7 @@ export default function Home() {
       const body = await res.json();
       const { signedUrls } = body;
 
-      console.log(signedUrls);
-
       const promises = files.map((file, i) => {
-        console.log(signedUrls[i], file, file.type);
         return axios.put(signedUrls[i], file, {
           headers: {
             "Content-Type": file.type,
@@ -79,10 +79,17 @@ export default function Home() {
     } else {
       alert("Nastala chyba pri odosielaní. Prosím skúste to neskôr.");
     }
+
+    setLoading(false);
   }
 
   return (
     <main className={`mt-24 flex min-h-screen flex-col items-center px-5 ${inter.className}`}>
+      <Head>
+        <title>SMND Obnova</title>
+        <meta name="description" content="Obnova edukačných materiálov" />
+        <link rel="icon" href="/favicon.png" />
+      </Head>
       <h1 className="text-center text-3xl font-bold">Obnova edukačných materiálov</h1>
       <p className="mt-1 w-full text-center text-sm leading-6 text-gray-600 md:w-2/3 lg:w-1/3">
         V dôsledku vyhorenia zborovne sa stratila vysoká kvantita edukačných materiálov. Ak by ste
@@ -307,8 +314,9 @@ export default function Home() {
         <div className="mt-3 flex items-center justify-end">
           <button
             type="submit"
+            disabled={loading}
             className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
-            Odoslať
+            {loading ? "Nahrávam..." : "Odoslať"}
           </button>
         </div>
       </form>
