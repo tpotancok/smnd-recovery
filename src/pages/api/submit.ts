@@ -65,10 +65,12 @@ enum Subject {
   sSJA = "sSJA",
   SVS = "SVS",
   SJA = "SJA",
+  SJL = "SJL",
   TECH = "TECH",
   TvP = "TvP",
   UaK = "UaK",
   VYV = "VYV",
+  OTHER = "other",
 }
 
 type SubmitBody = {

@@ -293,6 +293,7 @@ export default function Home() {
               <option value="sNEJ">Seminár z nemčiny</option>
               <option value="sSJL">Seminár zo slovenčiny</option>
               <option value="sSJA">Seminár zo španielčiny</option>
+              <option value="SJL">Slovenčina</option>
               <option value="SVS">Spoločensko-vedný seminár</option>
               <option value="SJA">Španielčina</option>
               <option value="TECH">Technika</option>
