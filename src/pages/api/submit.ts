@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { s3 } from "@/lib/aws";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { nanoid } from "nanoid";
 
 enum Year {
   ROCNIK_5 = "5",
@@ -108,6 +109,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { files } = body;
+
+    // Append random string to file name to prevent collisions
+    files.forEach((file) => (file.name = `${nanoid(5)}_${file.name}`));
 
     const signedUrls = await Promise.all(
       files.map(async (file) => {
