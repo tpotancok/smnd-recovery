@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { s3 } from "@/lib/aws";
+import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 enum Year {
@@ -15,12 +16,66 @@ enum Year {
   OTHER = "other",
 }
 
-type RequestBody = {
+enum Subject {
+  ANJ = "ANJ",
+  ANL = "ANL",
+  BIO = "BIO",
+  CHE = "CHE",
+  cBIO = "cBIO",
+  cCHE = "cCHE",
+  cFYZ = "cFYZ",
+  cGEG = "cGEG",
+  cMAT = "cMAT",
+  DES = "DES",
+  DEJ = "DEJ",
+  DEU = "DEU",
+  EFI = "EFI",
+  ETV = "ETV",
+  EVN = "EVN",
+  FIG = "FIG",
+  FYZ = "FYZ",
+  FyV = "FyV",
+  GEG = "GEG",
+  GZC = "GZC",
+  HUV = "HUV",
+  INF = "INF",
+  KAJ = "KAJ",
+  KNJ = "KNJ",
+  MAT = "MAT",
+  NAB = "NAB",
+  NEJ = "NEJ",
+  OBN = "OBN",
+  PMO = "PMO",
+  PRO = "PRO",
+  PSE = "PSE",
+  PSY = "PSY",
+  RET = "RET",
+  RUS = "RUS",
+  sBIO = "sBIO",
+  sCHE = "sCHE",
+  sDEJ = "sDEJ",
+  sEKO = "sEKO",
+  sFYZ = "sFYZ",
+  sGEG = "sGEG",
+  sINF = "sINF",
+  sMAT = "sMAT",
+  sNEJ = "sNEJ",
+  sSJL = "sSJL",
+  sSJA = "sSJA",
+  SVS = "SVS",
+  SJA = "SJA",
+  TECH = "TECH",
+  TvP = "TvP",
+  UaK = "UaK",
+  VYV = "VYV",
+}
+
+type SubmitBody = {
   files: { name: string; type: string }[];
   material: string;
   teacher: string;
   subject: string;
-  year: string;
+  year: Year;
 };
 
 const requestBodySchema = z
@@ -35,7 +90,7 @@ const requestBodySchema = z
     ),
     material: z.string(),
     teacher: z.string(),
-    subject: z.string(),
+    subject: z.nativeEnum(Subject),
     year: z.nativeEnum(Year),
   })
   .strict();
@@ -46,10 +101,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return;
   }
 
-  const body = req.body as RequestBody;
+  const body = req.body as SubmitBody;
 
   const parser = requestBodySchema.safeParse(body);
-  if (!parser.success) return res.status(400).json({ error: "Invalid request body" });
+  if (!parser.success) return res.status(400).json({ error: parser.error });
 
   try {
     const { files } = body;
@@ -58,13 +113,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       files.map(async (file) => {
         const fileParams = {
           Bucket: "smnd-recovery",
-          Key: `${body.year}/${body.subject}/${file.name}`,
+          Key: `${body.year}/${body.subject}/${file.name.replaceAll(/ /g, "_")}`,
           Expires: 600,
           ContentType: file.type,
         };
         return await s3.getSignedUrlPromise("putObject", fileParams);
       })
     );
+
+    await prisma.metadata.create({
+      data: {
+        material: body.material,
+        teacher: body.teacher,
+        subject: body.subject,
+        year: body.year,
+        files: files
+          .map((file) => `${body.year}/${body.subject}/${file.name.replaceAll(/ /g, "_")}`)
+          .join(","),
+        userIp: String(req.headers["x-real-ip"] || req.socket.remoteAddress),
+      },
+    });
 
     res.status(200).json({ signedUrls });
   } catch (err) {

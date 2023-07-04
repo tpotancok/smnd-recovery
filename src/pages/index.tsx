@@ -1,6 +1,6 @@
 import { Inter } from "next/font/google";
-import { useCallback, useRef, useState } from "react";
-import Dropzone, { useDropzone } from "react-dropzone";
+import { useCallback, useState } from "react";
+import Dropzone from "react-dropzone";
 import FileChip from "@/components/FileChip";
 import { Dropdown } from "@/components/Dropdown";
 import axios from "axios";
@@ -57,6 +57,8 @@ export default function Home() {
       const body = await res.json();
       const { signedUrls } = body;
 
+      console.log(signedUrls);
+
       const promises = files.map((file, i) => {
         console.log(signedUrls[i], file, file.type);
         return axios.put(signedUrls[i], file, {
@@ -68,14 +70,15 @@ export default function Home() {
       });
 
       await Promise.all(promises);
+      alert("Úspešne odoslané");
+      setMaterial("");
+      setTeacher("");
+      setSubject("");
+      setYear("");
+      setFiles([]);
+    } else {
+      alert("Nastala chyba pri odosielaní. Prosím skúste to neskôr.");
     }
-
-    alert("Úspešne odoslané");
-    setMaterial("");
-    setTeacher("");
-    setSubject("");
-    setYear("");
-    setFiles([]);
   }
 
   return (
