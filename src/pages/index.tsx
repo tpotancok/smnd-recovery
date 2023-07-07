@@ -85,7 +85,8 @@ export default function Home() {
   }
 
   return (
-    <main className={`mt-24 flex min-h-screen flex-col items-center px-5 ${inter.className}`}>
+    <main
+      className={`flex min-h-screen flex-col items-center px-5 py-12 md:py-24 ${inter.className}`}>
       <Head>
         <title>SMND Obnova</title>
         <meta name="description" content="Obnova edukačných materiálov" />
@@ -341,7 +342,13 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-end">
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-gray-600">
+            Made with ❤️ by{" "}
+            <a className="font-bold text-indigo-600" href="https://www.linkedin.com/in/vdemcak/">
+              Viktor Demčák
+            </a>
+          </span>
           <button
             type="submit"
             disabled={loading}
